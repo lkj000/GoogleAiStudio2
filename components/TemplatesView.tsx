@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { PluginTemplate, TemplateCategory } from '../types';
 import { SearchIcon, DownloadIcon } from './icons';
@@ -109,10 +110,13 @@ const ambientPadsWebAudioCode = `
 class AmbientPadGenerator {
     constructor(audioContext) {
         this.audioContext = audioContext;
+        // This is the final output node the engine will connect to.
         this.output = this.audioContext.createGain();
+        // This is the bus where all internal oscillators will connect.
+        this.instrumentBus = this.audioContext.createGain();
         this.oscillators = [];
         
-        // Effects
+        // Effects Chain
         this.filter = audioContext.createBiquadFilter();
         this.filter.type = 'lowpass';
         this.filter.frequency.value = 2000;
@@ -127,10 +131,18 @@ class AmbientPadGenerator {
         this.chorusDepth.connect(this.chorusDelay.delayTime);
         this.chorusLFO.start();
 
-        this.output.connect(this.filter);
+        // ** CORRECTED AUDIO ROUTING **
+        // 1. Instrument output goes into the filter.
+        this.instrumentBus.connect(this.filter);
+        
+        // 2. The filtered signal has two paths:
+        //    a) A 'dry' path directly to the final output.
+        this.filter.connect(this.output);
+        //    b) A 'wet' path through the chorus effect.
         this.filter.connect(this.chorusDelay);
-        this.filter.connect(this.audioContext.destination); // Dry
-        this.chorusDelay.connect(this.audioContext.destination); // Wet
+        
+        // 3. The wet chorus path also connects to the final output, mixing with the dry signal.
+        this.chorusDelay.connect(this.output);
 
         this.attackTime = 0.6;
         this.releaseTime = 0.8;
@@ -153,7 +165,8 @@ class AmbientPadGenerator {
         gainNode.gain.linearRampToValueAtTime(0.3, now + this.attackTime);
         
         osc.connect(gainNode);
-        gainNode.connect(this.output);
+        // Oscillators connect to the internal bus, NOT the final output directly.
+        gainNode.connect(this.instrumentBus);
         osc.start(time);
         
         this.oscillators.push({osc, gainNode});

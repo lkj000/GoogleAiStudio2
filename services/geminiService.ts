@@ -221,4 +221,101 @@ export const addModuleToProject = async (
 };
 
 export const generatePluginFromSmartTemplate = async (templateName: 'Amapianorizer' | 'Lofi Chillifier'): Promise<PluginTemplate> => {
-    const prompts
+    const prompts = {
+        Amapianorizer: `Generate a complete JUCE plugin package for a multi-effect called "Amapianorizer". It's specifically designed for creating authentic Amapiano sounds. The signal chain must be: Saturation -> Transient Shaper -> Reverb -> Filtered Delay. It should be an 'effect' type. Include musically-aware parameters like 'Pump Intensity' for the Transient Shaper, 'Log Drum Warmth' for the Saturation, 'Room Size' for the Reverb, and 'Swing Delay' for the Filtered Delay. Provide a full JUCE C++ implementation.`,
+        'Lofi Chillifier': `Generate a complete Web Audio plugin package for an effect called "Lofi Chillifier". Its purpose is to add vintage warmth and character. The signal chain should be a simple 'tape saturation' effect into a 'reverb'. The framework MUST be 'Web Audio'. Parameters should include 'Tape Hiss', 'Wow/Flutter', and 'Reverb Mix'. Provide a full Web Audio JavaScript class implementation.`,
+    };
+
+    const framework = templateName === 'Amapianorizer' ? 'JUCE' : 'Web Audio';
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            contents: prompts[templateName],
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: pluginGenerationSchema,
+            },
+        });
+
+        const generatedJson = parseJsonResponse(response.text);
+        
+        const pluginTemplate: PluginTemplate = {
+            id: generatedJson.id,
+            name: generatedJson.name,
+            type: generatedJson.type,
+            framework: generatedJson.framework,
+            description: generatedJson.description,
+            tags: generatedJson.tags,
+            parameters: generatedJson.parameters,
+            code: generatedJson.code,
+            signalChain: generatedJson.signalChain,
+        };
+
+        return pluginTemplate;
+
+    } catch (error) {
+        console.error(`Error generating smart template "${templateName}":`, error);
+        throw new Error(`Failed to generate ${templateName}. The AI returned an invalid format.`);
+    }
+};
+
+export const refactorSignalChain = async (
+  existingProject: PluginTemplate,
+  newSignalChain: string[]
+): Promise<PluginTemplate> => {
+    if (existingProject.framework !== 'JUCE') {
+        throw new Error("Signal chain refactoring is currently only supported for JUCE projects.");
+    }
+
+    const prompt = `
+    You are an expert JUCE C++ developer specializing in code refactoring.
+    A user has visually reordered the DSP modules in their plugin. Your task is to update the C++ code to match this new order.
+
+    **Refactoring Request:**
+    - New Signal Chain Order: ${JSON.stringify(newSignalChain)}
+
+    **Existing Plugin Context:**
+    - Plugin Name: ${existingProject.name}
+    - Existing Parameters: ${JSON.stringify(existingProject.parameters, null, 2)}
+    - Existing Signal Chain: ${JSON.stringify(existingProject.signalChain)}
+    - Existing Code:
+    \`\`\`cpp
+    ${existingProject.code}
+    \`\`\`
+
+    **Your Task:**
+    1.  **Analyze the Code:** Identify the \`processBlock\` method in the existing C++ code.
+    2.  **Refactor \`processBlock\`:** Rewrite the body of the \`processBlock\` method so that the DSP modules are called in the new order specified by \`New Signal Chain Order\`.
+    3.  **Return ONLY the changed parts:** Respond with a single JSON object containing ONLY the following updated properties:
+        - The new 'signalChain' array.
+        - The **entire, fully refactored C++ code** (with the updated \`processBlock\`).
+
+    CRITICAL: Do not modify any other part of the code unless necessary for the reordering. Do not return any other properties. Do not include markdown formatting.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-pro",
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: signalChainRefactoringSchema,
+            },
+        });
+
+        const generatedJson = parseJsonResponse(response.text);
+
+        const updatedTemplate: PluginTemplate = {
+            ...existingProject,
+            code: generatedJson.code,
+            signalChain: generatedJson.signalChain,
+        };
+
+        return updatedTemplate;
+
+    } catch (error) {
+        console.error("Error refactoring signal chain:", error);
+        throw new Error("Failed to refactor signal chain. The AI may have returned an invalid format.");
+    }
+};

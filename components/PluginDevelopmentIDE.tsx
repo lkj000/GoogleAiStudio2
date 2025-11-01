@@ -163,361 +163,307 @@ const AIGenerateView: React.FC<{ onPluginGenerated: (template: PluginTemplate, s
         log(`✨ Kicking off AI generation for: "${prompt}"...`);
         try {
             const plugin = await generatePluginFromDescription(prompt, framework);
-            log(`✅ AI successfully generated plugin: <span class="text-accent-hover font-semibold">${plugin.name}</span>`);
+            log(`✅ AI successfully generated plugin: <span class="text-accent font-semibold">${plugin.name}</span>.`);
             setGeneratedPlugin(plugin);
         } catch (e: any) {
-            log(`<span class="text-hot-pink">❌ AI Generation Failed: ${e.message}</span>`);
-            setError(e.message);
+            const errorMessage = `❌ AI Generation Failed: ${e.message}`;
+            log(errorMessage);
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleSmartTemplate = async (templateName: 'Amapianorizer' | 'Lofi Chillifier') => {
-        setLoadingMessage(`Building ${templateName}...`);
+    const handleSmartTemplateGenerate = async (templateName: 'Amapianorizer' | 'Lofi Chillifier') => {
+        setLoadingMessage(`Generating ${templateName}...`);
         setIsLoading(true);
         setError(null);
         setGeneratedPlugin(null);
-        log(`🧠 Generating Smart Template: ${templateName}...`);
+        log(`🧠 Kicking off Smart Template generation for: "${templateName}"...`);
         try {
             const plugin = await generatePluginFromSmartTemplate(templateName);
-            log(`✅ AI successfully generated Smart Template: <span class="text-accent-hover font-semibold">${plugin.name}</span>`);
+            log(`✅ AI successfully generated Smart Template: <span class="text-accent font-semibold">${plugin.name}</span>.`);
             setGeneratedPlugin(plugin);
         } catch (e: any) {
-            log(`<span class="text-hot-pink">❌ Smart Template Generation Failed: ${e.message}</span>`);
-            setError(e.message);
+            const errorMessage = `❌ Smart Template Generation Failed: ${e.message}`;
+            log(errorMessage);
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
     };
-    
+
     return (
-        <div className="p-8 h-full flex flex-col items-center justify-center">
+        <div className="p-6 h-full flex flex-col items-center">
             {isLoading && <Loader message={loadingMessage} />}
             <div className="w-full max-w-4xl">
-                 <div className="text-center">
-                    <h3 className="text-2xl font-bold text-primary mb-2">Create Anything</h3>
-                    <p className="text-secondary mb-6 max-w-xl mx-auto">Describe the plugin, module, or instrument you can imagine, or use a Smart Template to get started instantly.</p>
-                </div>
+                <h3 className="text-xl font-bold text-primary mb-2">Generate with Amapiano AI</h3>
+                <p className="text-secondary mb-6">Describe the plugin you want to create. The more detailed your description, the better the result.</p>
                 
-                <div className="bg-surface p-4 rounded-xl border border-background">
-                    <textarea 
-                        placeholder="e.g., 'A wobbly lo-fi chorus effect with wow and flutter knobs'" 
-                        rows={3} 
+                <div className="bg-surface/50 border border-background rounded-xl p-4">
+                    <textarea
                         value={prompt}
                         onChange={(e) => setPrompt(e.target.value)}
-                        className="w-full bg-background border border-surface rounded-md py-3 px-4 text-primary placeholder-secondary focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                        placeholder="e.g., A vintage tape reverb with controls for mix, decay, and tape saturation..."
+                        className="w-full h-24 bg-transparent text-primary placeholder-secondary resize-none focus:outline-none"
                     />
-
-                    <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center space-x-2 p-1 bg-background rounded-lg">
-                            <button onClick={() => setFramework('JUCE')} className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${framework === 'JUCE' ? 'bg-accent text-white' : 'text-secondary hover:bg-surface'}`}>JUCE (C++)</button>
-                            <button onClick={() => setFramework('Web Audio')} className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${framework === 'Web Audio' ? 'bg-accent text-white' : 'text-secondary hover:bg-surface'}`}>Web Audio (JS)</button>
+                    <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center space-x-2">
+                            <span className="text-sm font-semibold text-secondary">Framework:</span>
+                            <button onClick={() => setFramework('JUCE')} className={`px-3 py-1 text-sm rounded-md ${framework === 'JUCE' ? 'bg-accent text-white' : 'bg-background text-secondary'}`}>JUCE</button>
+                            <button onClick={() => setFramework('Web Audio')} className={`px-3 py-1 text-sm rounded-md ${framework === 'Web Audio' ? 'bg-accent text-white' : 'bg-background text-secondary'}`}>Web Audio</button>
                         </div>
-
-                         <button onClick={handleGenerate} disabled={isLoading} className="w-full sm:w-auto bg-accent text-primary font-semibold py-2.5 px-6 rounded-lg hover:bg-accent-hover transition-colors flex items-center justify-center space-x-2 disabled:opacity-50">
-                            <AiGenerateIcon />
-                            <span>Generate Plugin</span>
-                        </button>
+                        <button onClick={handleGenerate} className="bg-accent text-primary font-semibold py-2 px-6 rounded-lg hover:bg-accent-hover transition-colors">Generate</button>
                     </div>
                 </div>
 
+                {error && <div className="mt-4 text-red-400 bg-red-900/50 p-3 rounded-lg">{error}</div>}
+                
                 <div className="mt-8">
-                    <h4 className="text-lg font-semibold text-center text-secondary mb-4">Or start with a Smart Template</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                       <SmartTemplateCard 
-                            title="Amapianorizer"
-                            description="A genre-defining multi-effect for authentic Amapiano sounds."
-                            onGenerate={() => handleSmartTemplate('Amapianorizer')}
-                       />
-                       <SmartTemplateCard 
-                            title="Lofi Chillifier"
-                            description="Instantly add vintage warmth, tape hiss, and hazy echoes."
-                            onGenerate={() => handleSmartTemplate('Lofi Chillifier')}
-                       />
+                    <h4 className="text-lg font-bold text-primary mb-4">Or use a Smart Template:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <SmartTemplateCard 
+                            title="Amapianorizer" 
+                            description="A multi-effect for authentic Amapiano sounds (Saturation, Transient Shaper, Reverb, Delay)."
+                            onGenerate={() => handleSmartTemplateGenerate('Amapianorizer')}
+                        />
+                        <SmartTemplateCard 
+                            title="Lofi Chillifier" 
+                            description="Adds vintage warmth with tape hiss, wow/flutter, and reverb for lo-fi beats."
+                            onGenerate={() => handleSmartTemplateGenerate('Lofi Chillifier')}
+                        />
                     </div>
                 </div>
 
-                {error && <p className="mt-4 text-hot-pink text-center">{error}</p>}
+                {generatedPlugin && (
+                    <div className="mt-8 animate-fade-in">
+                        <h3 className="text-lg font-bold text-primary mb-4">Generation Complete!</h3>
+                        <AIGeneratedTemplateCard template={generatedPlugin} onSelect={(p) => onPluginGenerated(p, 'ai')} />
+                    </div>
+                )}
             </div>
-
-            {generatedPlugin && (
-                <div className="mt-8 w-full max-w-md">
-                    <AIGeneratedTemplateCard template={generatedPlugin} onSelect={() => onPluginGenerated(generatedPlugin, 'ai')} />
-                </div>
-            )}
         </div>
     );
 };
 
 
-// --- Main IDE Component ---
-
-type Tab = 'AI Generate' | 'Templates' | 'Signal Chain' | 'Code Editor' | 'Visual Builder' | 'Parameters' | 'Test' | 'Console' | 'Publish';
-
-const IdeTab: React.FC<{ icon: React.ReactNode; label: Tab; activeTab: Tab; onClick: (tab: Tab) => void; }> = ({ icon, label, activeTab, onClick }) => (
-    <button
-        onClick={() => onClick(label)}
-        className={`flex items-center px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${activeTab === label ? 'border-accent text-primary' : 'border-transparent text-secondary hover:text-primary hover:border-surface'}`}
-    >
-        {icon}
-        {label}
-    </button>
-);
-
-const ActionButton: React.FC<{ children: React.ReactNode; primary?: boolean; className?: string; onClick?: () => void; disabled?: boolean; }> = ({ children, primary, className = '', onClick, disabled }) => (
-    <button onClick={onClick} disabled={disabled} className={`flex items-center justify-center px-4 py-2 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${primary ? 'bg-accent text-primary hover:bg-accent-hover' : 'bg-surface text-primary hover:bg-background'} ${className}`}>
-        {children}
-    </button>
-);
-
+const TABS = [
+    { id: 'ai', name: 'AI Generate', icon: <AiGenerateIcon /> },
+    { id: 'templates', name: 'Templates', icon: <TemplateIcon /> },
+    { id: 'signal-chain', name: 'Signal Chain', icon: <SignalChainIcon /> },
+    { id: 'code', name: 'Code Editor', icon: <CodeIcon /> },
+    { id: 'builder', name: 'Visual Builder', icon: <VisualBuilderIcon /> },
+    { id: 'parameters', name: 'Parameters', icon: <ParametersIcon /> },
+    { id: 'test', name: 'Test', icon: <TestIcon /> },
+    { id: 'console', name: 'Console', icon: <ConsoleIcon /> },
+    { id: 'publish', name: 'Publish', icon: <PublishIcon /> },
+];
 
 const PluginDevelopmentIDE: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<Tab>('Templates');
+    const [activeTab, setActiveTab] = useState('templates');
     const [activeProject, setActiveProject] = useState<PluginTemplate | null>(null);
-    const [projectCode, setProjectCode] = useState<string>('');
-    const [consoleMessages, setConsoleMessages] = useState<string[]>(['Welcome to Amapiano AI Plugin IDE.']);
-    const [isProcessing, setIsProcessing] = useState(false); // For both compiling and AI module adding
+    const [logMessages, setLogMessages] = useState<string[]>(['[INFO] Amapiano AI IDE Initialized. Welcome!']);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isAiProcessing, setIsAiProcessing] = useState(false);
     const [compilationSuccess, setCompilationSuccess] = useState(false);
-    const [contentKey, setContentKey] = useState(0); // Used to re-trigger animation
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isAudioReady, setIsAudioReady] = useState(false);
-    const analyserNode = useRef<AnalyserNode | null>(null);
 
-    useEffect(() => {
-        const init = async () => {
-            try {
-                const analyser = await audioEngine.init();
-                analyserNode.current = analyser;
-                setIsAudioReady(true);
-            } catch (error) {
-                console.error("Failed to initialize audio engine:", error);
-                logToConsole('<span class="text-hot-pink">Error initializing audio engine. Please allow microphone access or refresh.</span>');
-            }
-        };
-        init();
+    const analyserNodeRef = useRef<AnalyserNode | null>(null);
+
+    const log = useCallback((message: string) => {
+        const timestamp = new Date().toLocaleTimeString();
+        setLogMessages(prev => [...prev, `[${timestamp}] ${message}`]);
     }, []);
 
     useEffect(() => {
-        if (activeProject) {
-            setProjectCode(activeProject.code);
-            if (activeProject.framework === 'Web Audio') {
-                audioEngine.connectPlugin(activeProject);
-            } else {
-                audioEngine.disconnectPlugin();
+        const initAudio = async () => {
+            log('[INFO] Initializing Audio Engine...');
+            try {
+                const analyser = await audioEngine.init();
+                analyserNodeRef.current = analyser;
+                log('[INFO] Audio Engine ready.');
+            } catch (e) {
+                log(`[ERROR] Failed to initialize Audio Engine. ${e}`);
             }
+        };
+        initAudio();
+
+        return () => {
+            audioEngine.stop();
+        };
+    }, [log]);
+
+    const handleLoadProject = useCallback((template: PluginTemplate, source: 'template' | 'ai') => {
+        log(`[INFO] Loading project: <span class="text-accent font-semibold">${template.name}</span> from ${source}.`);
+        setActiveProject(template);
+        setActiveTab('code');
+        setCompilationSuccess(false);
+
+        if (template.framework === 'Web Audio') {
+            log(`[INFO] Connecting Web Audio plugin to audio engine.`);
+            audioEngine.connectPlugin(template);
         } else {
-            setProjectCode('');
             audioEngine.disconnectPlugin();
         }
-    }, [activeProject]);
-
-    useEffect(() => {
-        setContentKey(prev => prev + 1);
-    }, [activeTab, activeProject]);
-
-    const logToConsole = (message: string) => {
-        const timestamp = new Date().toLocaleTimeString();
-        setConsoleMessages(prev => [...prev, `<span class="text-gray-500">[${timestamp}]</span> ${message}`]);
-    };
-
-    const handleSelectTemplate = (template: PluginTemplate, source: 'template' | 'ai' = 'template') => {
-        setCompilationSuccess(false);
-        setActiveProject(template);
-        if (source === 'ai') {
-             logToConsole(`🤖 AI-Generated Plugin "<span class="text-accent-hover font-semibold">${template.name}</span>" loaded. Check out its controls in the Visual Builder!`);
-        } else {
-            logToConsole(`📄 Template "<span class="text-accent-hover font-semibold">${template.name}</span>" loaded.`);
-        }
-        setActiveTab('Visual Builder');
-    };
-    
-    const handleCloseProject = () => {
-        if (activeProject) {
-            logToConsole(`Project "<span class="text-accent-hover font-semibold">${activeProject.name}</span>" closed.`);
-        }
         if (isPlaying) {
-            audioEngine.stop();
-            setIsPlaying(false);
+             togglePlay();
         }
-        setActiveProject(null);
-        setCompilationSuccess(false);
-        setActiveTab('Templates');
+    }, [log, isPlaying]);
+
+    const handleCodeChange = (newCode: string) => {
+        if (activeProject) {
+            setActiveProject({ ...activeProject, code: newCode });
+            setCompilationSuccess(false);
+        }
     };
 
-    const handleCompile = async () => {
+    const handleCompile = () => {
         if (!activeProject) return;
+        log(`[BUILD] Starting compilation for <span class="font-semibold text-accent">${activeProject.name}</span>...`);
+        setIsLoading(true);
         setCompilationSuccess(false);
-        setIsProcessing(true);
-        setActiveTab('Console');
-        logToConsole(`Starting cloud build for "${activeProject.name}"...`);
-
+        
         const steps = [
-            "Packaging source files...",
-            "Authenticating with build service...",
-            "Uploading (5.2 MB)...",
-            "Build queued on `macos-arm64` runner...",
-            "Installing JUCE dependencies...",
-            "Compiling PluginProcessor.cpp...",
-            "Compiling PluginEditor.cpp...",
-            "Linking...",
-            "Signing artifact...",
+            `Analyzing ${activeProject.framework} dependencies...`,
+            `Compiling source code... (took 2.1s)`,
+            `Linking DSP modules: ${activeProject.signalChain?.join(', ')}...`,
+            `Optimizing binary...`,
+            `✅ Build successful! Your plugin is ready to be exported from the Console tab.`
         ];
-        
-        for (const step of steps) {
-            await new Promise(resolve => setTimeout(resolve, Math.random() * 500 + 200));
-            logToConsole(`✓ ${step}`);
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 500));
-        logToConsole("✨ Build successful! Artifacts ready for export.");
-        setIsProcessing(false);
-        setCompilationSuccess(true);
-    };
-    
-    const handleAddModule = async (moduleName: string, moduleDescription: string) => {
-        if (!activeProject) return;
-        setCompilationSuccess(false);
 
-        setIsProcessing(true);
-        setActiveTab('Console');
-        logToConsole(`🧠 Instructing AI to add <span class="text-vivid-sky-blue font-semibold">'${moduleName}'</span> module...`);
-
-        try {
-            const updatedProject = await addModuleToProject(activeProject, moduleName, moduleDescription);
-            setActiveProject(updatedProject);
-            logToConsole(`✅ AI successfully integrated the <span class="text-vivid-sky-blue font-semibold">'${moduleName}'</span> module.`);
-            logToConsole(`🚀 The new module has been added to your Signal Chain!`);
-            setActiveTab('Signal Chain');
-        } catch (e: any) {
-            logToConsole(`<span class="text-hot-pink">❌ AI Module Integration Failed: ${e.message}</span>`);
-        } finally {
-            setIsProcessing(false);
-        }
+        steps.forEach((step, index) => {
+            setTimeout(() => {
+                log(`[BUILD] ${step}`);
+                if (index === steps.length - 1) {
+                    setIsLoading(false);
+                    setCompilationSuccess(true);
+                    setActiveTab('console');
+                }
+            }, (index + 1) * 700);
+        });
     };
 
-    const handleReorderChain = async (newChain: string[]) => {
-        if (!activeProject) return;
-        setCompilationSuccess(false);
-        setIsProcessing(true);
-        setActiveTab('Console');
-        logToConsole(`🧠 Instructing AI to refactor signal chain...`);
+    const handleReorder = async (newChain: string[]) => {
+        if (!activeProject || activeProject.framework !== 'JUCE') return;
+        log(`[AI] Refactoring signal chain to: <span class="text-secondary">${newChain.join(' -> ')}</span>...`);
+        setIsAiProcessing(true);
         try {
             const updatedProject = await refactorSignalChain(activeProject, newChain);
             setActiveProject(updatedProject);
-            logToConsole(`✅ AI successfully refactored the signal chain order.`);
+            log(`[AI] ✅ Code successfully refactored for new signal chain.`);
         } catch (e: any) {
-             logToConsole(`<span class="text-hot-pink">❌ AI Signal Chain Refactor Failed: ${e.message}</span>`);
+            log(`[AI] ❌ ERROR: ${e.message}`);
         } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const togglePlay = async () => {
-        if (isPlaying) {
-            audioEngine.stop();
-            setIsPlaying(false);
-        } else {
-            await audioEngine.play();
-            setIsPlaying(true);
-        }
-    };
-
-    const renderContent = () => {
-        const noProject = !activeProject && !['Templates', 'AI Generate'].includes(activeTab);
-        if (noProject) {
-             return (
-                <div className="p-8 text-center text-secondary h-full flex flex-col justify-center items-center">
-                    <h3 className="text-xl font-semibold text-primary">No Active Project</h3>
-                    <p className="mt-2">Please select a template or use AI Generate to begin.</p>
-                     <button onClick={() => setActiveTab('Templates')} className="mt-4 bg-accent text-primary font-semibold py-2 px-4 rounded-lg hover:bg-accent-hover transition-colors">
-                        Go to Templates
-                    </button>
-                </div>
-            );
-        }
-
-        switch (activeTab) {
-            case 'Templates':
-                return <TemplatesView onSelectTemplate={handleSelectTemplate} />;
-            case 'Signal Chain':
-                return activeProject && <SignalPatcher project={activeProject} onReorder={handleReorderChain} onAddModule={handleAddModule} isProcessing={isProcessing} />;
-            case 'Code Editor':
-                return activeProject && <CodeEditorView code={projectCode} onCodeChange={setProjectCode} />;
-            case 'Visual Builder':
-                return activeProject && <VisualBuilderView project={activeProject} analyserNode={analyserNode.current} />;
-            case 'Parameters':
-                return activeProject && <ParametersView parameters={activeProject.parameters} />;
-            case 'Test':
-                return activeProject && <TestView />;
-            case 'Console':
-                return <ConsoleView messages={consoleMessages} compilationSuccess={compilationSuccess} project={activeProject} />;
-            case 'Publish':
-                return activeProject && <PublishView />;
-            case 'AI Generate':
-                return <AIGenerateView onPluginGenerated={handleSelectTemplate} log={logToConsole} />;
-            default:
-                return null;
+            setIsAiProcessing(false);
         }
     };
     
-    const projectName = activeProject ? `${activeProject.name}` : "Untitled Plugin";
+    const handleAddModule = async (name: string, description: string) => {
+        if (!activeProject || activeProject.framework !== 'JUCE') return;
+        log(`[AI] Adding module <span class="font-semibold text-accent">${name}</span> to project...`);
+        setIsAiProcessing(true);
+        try {
+            const updatedProject = await addModuleToProject(activeProject, name, description);
+            setActiveProject(updatedProject);
+            log(`[AI] ✅ Module integrated and code refactored successfully.`);
+        } catch (e: any) {
+            log(`[AI] ❌ ERROR: ${e.message}`);
+        } finally {
+            setIsAiProcessing(false);
+        }
+    };
+
+    const togglePlay = useCallback(async () => {
+        if (isPlaying) {
+            await audioEngine.stop();
+            setIsPlaying(false);
+            log('[AUDIO] Playback stopped.');
+        } else {
+            if (activeProject?.framework === 'Web Audio') {
+                const success = await audioEngine.play(activeProject);
+                if (success) {
+                    setIsPlaying(true);
+                    log('[AUDIO] Playback started.');
+                } else {
+                     log('[WARN] Audio context could not be started. Click the play button again to grant permission.');
+                }
+            } else {
+                log('[WARN] Real-time preview is only available for Web Audio plugins.');
+            }
+        }
+    }, [isPlaying, activeProject, log]);
+
+
+    const renderActiveView = () => {
+        if (!activeProject) {
+            switch (activeTab) {
+                case 'ai':
+                    return <AIGenerateView onPluginGenerated={handleLoadProject} log={log} />;
+                default:
+                    return <TemplatesView onSelectTemplate={handleLoadProject} />;
+            }
+        }
+
+        switch (activeTab) {
+            case 'ai': return <AIGenerateView onPluginGenerated={handleLoadProject} log={log} />;
+            case 'templates': return <TemplatesView onSelectTemplate={handleLoadProject} />;
+            case 'code': return <CodeEditorView code={activeProject.code} onCodeChange={handleCodeChange} />;
+            case 'parameters': return <ParametersView parameters={activeProject.parameters} />;
+            case 'test': return <TestView />;
+            case 'publish': return <PublishView />;
+            case 'console': return <ConsoleView messages={logMessages} compilationSuccess={compilationSuccess} project={activeProject} />;
+            case 'builder': return <VisualBuilderView project={activeProject} analyserNode={analyserNodeRef.current} />;
+            case 'signal-chain': return <SignalPatcher project={activeProject} onReorder={handleReorder} onAddModule={handleAddModule} isProcessing={isAiProcessing} />;
+            default: return <div>Unknown Tab</div>;
+        }
+    };
 
     return (
-        <div className="bg-surface rounded-xl border border-background shadow-2xl overflow-hidden shadow-accent-glow/10">
-            {/* IDE Header */}
-            <div className="p-4 flex items-center justify-between border-b border-background bg-surface/80 backdrop-blur-sm">
-                <div className="flex items-center space-x-4">
-                    <div className="text-accent">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold text-primary">Plugin Development IDE</h1>
-                        <div className="flex items-center text-xs text-secondary space-x-2 mt-1">
-                            <span>{projectName}</span>
-                            {activeProject && <span className="bg-vivid-sky-blue/20 text-vivid-sky-blue px-2 py-0.5 rounded-full font-semibold">{activeProject.framework}</span>}
+        <div className="bg-surface rounded-xl shadow-2xl shadow-black/50 border border-background w-full mx-auto animate-fade-in">
+            {isLoading && <Loader message="Compiling..." />}
+            <header className="px-6 py-4 border-b border-background flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                <div>
+                    <div className="flex items-center space-x-3">
+                         <div className="bg-accent/20 p-2 rounded-lg text-accent">
+                            <CodeIcon />
                         </div>
+                        <h1 className="text-xl font-bold text-primary">Plugin Development IDE</h1>
                     </div>
+                    {activeProject && (
+                         <div className="flex items-center space-x-2 text-sm mt-2">
+                            <span className="text-secondary">Loaded:</span>
+                            <span className="font-semibold text-primary">{activeProject.name}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-semibold ${activeProject.framework === 'JUCE' ? 'bg-blue-900/50 text-blue-300' : 'bg-yellow-900/50 text-yellow-300'}`}>{activeProject.framework}</span>
+                        </div>
+                    )}
                 </div>
-                <div className="flex items-center space-x-2">
-                    {activeProject?.framework === 'Web Audio' && isAudioReady && <TransportControls isPlaying={isPlaying} onTogglePlay={togglePlay} />}
-                    <ActionButton disabled={!activeProject}><SaveIcon /> Save</ActionButton>
-                    <ActionButton primary onClick={handleCompile} disabled={!activeProject || isProcessing}>
-                         {isProcessing && activeTab === 'Console' ? (
-                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8_0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        ) : null}
-                        {isProcessing ? 'Processing...' : 'Compile'}
-                    </ActionButton>
-                    <ActionButton onClick={() => setActiveTab('Test')} disabled={!activeProject}>Test</ActionButton>
-                    <ActionButton onClick={() => setActiveTab('Publish')} disabled={!activeProject}>Publish</ActionButton>
-                    {activeProject &&
-                        <button onClick={handleCloseProject} className="text-secondary hover:text-primary ml-2" title="Close Project">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                {activeProject && (
+                    <div className="flex items-center space-x-2 mt-4 sm:mt-0">
+                        {activeProject.framework === 'Web Audio' && <TransportControls isPlaying={isPlaying} onTogglePlay={togglePlay} />}
+                        <button className="px-4 py-2 text-sm font-semibold rounded-lg bg-surface hover:bg-background transition-colors flex items-center"><SaveIcon /> Save</button>
+                        <button onClick={handleCompile} className="px-4 py-2 text-sm font-semibold rounded-lg bg-accent text-primary hover:bg-accent-hover transition-colors">Compile</button>
+                    </div>
+                )}
+            </header>
+            
+            <div className="flex border-b border-background overflow-x-auto">
+                {TABS.map(tab => (
+                    (!activeProject && !['ai', 'templates'].includes(tab.id)) ? null : (
+                        <button 
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`flex items-center px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors ${activeTab === tab.id ? 'border-accent text-primary' : 'border-transparent text-secondary hover:text-primary'}`}
+                        >
+                            {tab.icon}
+                            <span className="ml-2">{tab.name}</span>
                         </button>
-                    }
-                </div>
+                    )
+                ))}
             </div>
 
-            {/* Tab Navigation */}
-            <div className="flex items-center border-b border-background overflow-x-auto">
-                <IdeTab icon={<AiGenerateIcon />} label="AI Generate" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<TemplateIcon />} label="Templates" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<SignalChainIcon />} label="Signal Chain" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<CodeIcon />} label="Code Editor" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<VisualBuilderIcon />} label="Visual Builder" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<ParametersIcon />} label="Parameters" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<TestIcon />} label="Test" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<ConsoleIcon />} label="Console" activeTab={activeTab} onClick={setActiveTab} />
-                <IdeTab icon={<PublishIcon />} label="Publish" activeTab={activeTab} onClick={setActiveTab} />
-            </div>
-
-            {/* Tab Content */}
-            <div key={contentKey} className="bg-background min-h-[70vh] animate-fade-in">
-                {renderContent()}
-            </div>
+            <main className="min-h-[60vh]">
+                {renderActiveView()}
+            </main>
         </div>
     );
 };
